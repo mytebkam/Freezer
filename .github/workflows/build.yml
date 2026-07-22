@@ -28,5 +28,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: FREEZER-app
-        path: dist/freez
-        er.exe
+        path: dist/freezer.exe
