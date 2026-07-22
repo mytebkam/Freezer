@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-FREEZER v2.0 - Modern UI
+FREEZER v2.1 - Modern UI
 """
 
-import sys, os, subprocess
+import sys, os, subprocess, webbrowser
 
 # ── Auto-install deps ────────────────────────────────────────────────────────
 def _ensure(pkg, import_as=None):
@@ -103,23 +103,27 @@ class FreezerApp(ctk.CTk):
         hdr = ctk.CTkFrame(self, fg_color="transparent")
         hdr.pack(fill="x", padx=20, pady=(20, 10))
         ctk.CTkLabel(hdr, text="FREEZER", font=("Arial", 20, "bold"), text_color="#3B82F6").pack(side="left")
-        ctk.CTkLabel(hdr, text="v2.0", font=("Arial", 12), text_color="#64748B").pack(side="left", padx=5, pady=(5,0))
+        ctk.CTkLabel(hdr, text="v2.1", font=("Arial", 12), text_color="#64748B").pack(side="left", padx=5, pady=(5,0))
         
-        # ── Big Power Button ──
-        btn_frame = ctk.CTkFrame(self, fg_color="transparent")
-        btn_frame.pack(pady=(40, 20))
+        # ── Telegram Ad Banner ──
+        tg_frame = ctk.CTkFrame(self, fg_color="#141E33", corner_radius=12)
+        tg_frame.pack(fill="x", padx=20, pady=(10, 15))
         
-        # Делаем круглую кнопку
-        self.power_btn = ctk.CTkButton(btn_frame, text="⏻", font=("Arial", 60), 
-                                       width=160, height=160, corner_radius=80,
-                                       fg_color="#0E1525", hover_color="#141E33",
-                                       border_width=4, border_color="#1E2D4A",
-                                       text_color="#64748B",
-                                       command=self._manual_freeze)
-        self.power_btn.pack()
+        tg_btn = ctk.CTkButton(tg_frame, text="📢 тгк с новостями", font=("Arial", 14, "bold"), 
+                               fg_color="transparent", text_color="#60A5FA", hover_color="#1E2D4A",
+                               command=lambda: webbrowser.open("https://t.me/darexshadowxd"))
+        tg_btn.pack(fill="x", pady=12, padx=10)
         
+        # ── Status & Manual Freeze ──
         self.status_lbl = ctk.CTkLabel(self, text="Нажмите для заморозки", font=("Arial", 14), text_color="#64748B")
-        self.status_lbl.pack(pady=(0, 40))
+        self.status_lbl.pack(pady=(10, 10))
+
+        self.power_btn = ctk.CTkButton(self, text="❄ ЗАМОРОЗИТЬ", font=("Arial", 13, "bold"), 
+                                       width=160, height=36, corner_radius=18,
+                                       fg_color="#0E1525", hover_color="#141E33",
+                                       border_width=2, border_color="#1E2D4A", text_color="#3B82F6",
+                                       command=self._manual_freeze)
+        self.power_btn.pack(pady=(0, 30))
 
         # ── Main Card (Settings) ──
         card = ctk.CTkFrame(self, fg_color="#0E1525", corner_radius=20)
@@ -158,15 +162,15 @@ class FreezerApp(ctk.CTk):
         self.clr_btn = ctk.CTkButton(hk_frame, text="✕", width=30, fg_color="#F87171", hover_color="#ef4444", command=self._clear_hk)
         self.clr_btn.pack(side="right", padx=(0, 10))
 
-        # ── Bottom Nav (Visual imitation of INCY) ──
+        # ── Bottom Nav ──
         nav = ctk.CTkFrame(self, fg_color="#0E1525", corner_radius=20, height=70)
         nav.pack(fill="x", padx=20, pady=(0, 20))
         nav.pack_propagate(False)
         
-        # Spacer frames to center the buttons
         ctk.CTkButton(nav, text="Главная", fg_color="#1E2D4A", text_color="#3B82F6", width=100, corner_radius=15).pack(side="left", padx=(25, 10), pady=15)
         ctk.CTkButton(nav, text="Сохранить", fg_color="transparent", text_color="#64748B", width=100, hover_color="#141E33", command=self._save).pack(side="left", padx=10, pady=15)
-        ctk.CTkButton(nav, text="Настройки", fg_color="transparent", text_color="#64748B", width=100, hover_color="#141E33").pack(side="left", padx=(10, 25), pady=15)
+        # Добавлена команда открытия конфигурации
+        ctk.CTkButton(nav, text="Настройки", fg_color="transparent", text_color="#64748B", width=100, hover_color="#141E33", command=self._open_settings).pack(side="left", padx=(10, 25), pady=15)
 
     def _apply_cfg(self):
         self.proc_var.set(self.cfg.get("process", ""))
@@ -182,6 +186,14 @@ class FreezerApp(ctk.CTk):
         save_cfg(self.cfg)
         self.status_lbl.configure(text="✓ Настройки сохранены", text_color="#4ADE80")
         self.after(1500, lambda: self.status_lbl.configure(text="Нажмите для заморозки", text_color="#64748B"))
+
+    def _open_settings(self):
+        # Открывает файл freezer.json в Блокноте
+        if os.path.exists(_SETTINGS_PATH):
+            os.startfile(_SETTINGS_PATH)
+        else:
+            self.status_lbl.configure(text="✗ Конфиг еще не создан", text_color="#F87171")
+            self.after(2000, lambda: self.status_lbl.configure(text="Нажмите для заморозки", text_color="#64748B"))
 
     def _manual_freeze(self):
         self._do_freeze()
@@ -208,9 +220,8 @@ class FreezerApp(ctk.CTk):
         if not self._lock.acquire(blocking=False): return
         try:
             self.frozen = True
-            # Обновление UI: кнопка светится синим при заморозке
             self.after(0, lambda: self.status_lbl.configure(text="❄ ЗАМОРОЖЕН", text_color="#BAE6FD"))
-            self.after(0, lambda: self.power_btn.configure(border_color="#3B82F6", text_color="#3B82F6"))
+            self.after(0, lambda: self.power_btn.configure(border_color="#3B82F6", text_color="#BAE6FD"))
 
             suspend_process(pid)
             time.sleep(ms / 1000.0)
@@ -221,7 +232,7 @@ class FreezerApp(ctk.CTk):
         finally:
             self.frozen = False
             self.after(0, lambda: self.status_lbl.configure(text="Нажмите для заморозки", text_color="#64748B"))
-            self.after(0, lambda: self.power_btn.configure(border_color="#1E2D4A", text_color="#64748B"))
+            self.after(0, lambda: self.power_btn.configure(border_color="#1E2D4A", text_color="#3B82F6"))
             self._lock.release()
 
     # ── Hotkey binding ──
@@ -297,3 +308,4 @@ if __name__ == "__main__":
         sys.exit(1)
     app = FreezerApp()
     app.mainloop()
+    
