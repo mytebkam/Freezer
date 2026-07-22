@@ -9,10 +9,12 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v3
+    # Обновили checkout до v4
+    - uses: actions/checkout@v4
 
+    # Обновили setup-python до v5
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
@@ -24,8 +26,9 @@ jobs:
     - name: Build with PyInstaller
       run: pyinstaller --noconsole --onefile freezer.py
 
+    # Обновили upload-artifact до v4 (из-за которого была ошибка)
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: FREEZER-app
         path: dist/freezer.exe
